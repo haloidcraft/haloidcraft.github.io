@@ -1,11 +1,456 @@
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HaloidCraft</title>
-<body style="font-family: Georgia, serif; max-width: 40rem; margin: 15vh auto; padding: 0 1rem;">
-  <h1>HaloidCraft</h1>
-  <p>From silver to silicon. Tools for black-and-white film and historic photography.</p>
-  <p>Coming soon. Follow along on <a href="https://github.com/haloidcraft">GitHub</a>.</p>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="HaloidCraft Grain: calibrated camera scanning for black-and-white film. Measure the rig, convert in linear, print it like a darkroom.">
+<title>HaloidCraft Grain</title>
+<link rel="icon" href="haloidcraft-logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<!-- =====================================================================
+     HaloidCraft Grain. DESTINATION: haloidcraft.github.io (haloidcraft.com).
+     Standalone, no build step.
+
+     RESTRAINT (keep it). Short headline, large photographs, little copy.
+     No feature grid, no icon row, no stat callouts, no testimonials. If a
+     block grows past a short paragraph, something has gone wrong.
+
+     TONAL RHYTHM. Four grounds alternate down the page: paper, card,
+     warm, and a dark run for the measurement sections. The dark band is
+     not decoration. The plots are dark images, and on light paper they
+     read as holes punched in the page; on the dark ground they belong to
+     it. Keep the measurement sections dark for that reason.
+
+     COLOUR. One orange only: #AA5222, from the logo artwork. Do not add a
+     second. It measures 4.6-5.1:1 on the three light grounds, and 3.24:1
+     on the dark one, which is valid for LARGE text only. So on .s-dark it
+     is used for headings and large type, never for small labels; small
+     text there uses --d-ink-2 / --d-ink-3. Do not substitute #A24A19 or
+     #8a4b12 (docs/haloidcraft_brand_guidelines.md s5).
+
+     FONTS. Spectral display, IBM Plex Sans body, IBM Plex Mono labels.
+
+     LAYOUT VARIATION. Blocks deliberately differ: full-width photograph,
+     two-up plates, split text-beside-figure, narrow text column. Do not
+     flatten them back into one repeated shape.
+
+     NAVIGATION. The bar is sticky and tracks the section in view through
+     an IntersectionObserver, with a hairline progress rule. It degrades
+     to a plain anchor list without JavaScript.
+
+     The link to compare.html was deliberately removed for now, from the
+     nav and from the foot of the Limits block. docs/compare.html still
+     exists and is still maintained.
+
+     NO PRICE AND NO LICENCE STATEMENT (docs/BUSINESS_MODEL.md).
+     Measurements are one rig, one date, labelled so. Figures unretouched.
+     ===================================================================== -->
+
+<style>
+:root{
+  color-scheme:light;
+  --display:"Spectral",Iowan Old Style,Palatino,Georgia,serif;
+  --body:"IBM Plex Sans",Segoe UI,Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+
+  --paper:#f3f4f1;
+  --card:#fafaf8;
+  --warm:#f4ece2;
+  --dark:#1b1a20;
+
+  --ink:#1a1720;
+  --ink-2:#5f5b67;
+  --ink-3:#8d8995;
+  --rule:#d8d8d2;
+  --hair:#e4e4de;
+  --warm-rule:#e3d6c6;
+
+  --d-ink:#e8e6e2;
+  --d-ink-2:#bdb8c3;
+  --d-ink-3:#908b98;
+  --d-rule:#343039;
+
+  --orange:#AA5222;
+  --orange-pale:#f2e5da;
+  --plot-bg:#17161b;
+
+  --gutter:clamp(18px,5vw,56px);
+  --max:1080px;
+  --bar:52px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;overflow-x:hidden}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.016em;margin:0}
+h1{font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.08;text-wrap:balance}
+h1 .ln{display:block}
+/* No ch cap on the headings. A guessed ch value was what broke these: 'ch' is the
+   width of a zero, Spectral's lowercase is narrower, so the cap kept landing just
+   under the natural line and orphaning the last word. The COLUMN sets the measure
+   instead. Headings in a full-width block therefore sit on one line, the two inside
+   the narrow .split column wrap to two lines, and text-wrap:balance splits those
+   evenly rather than leaving one word stranded. Do not reintroduce a max-width here. */
+h2{font-size:clamp(1.5rem,3.4vw,2.1rem);line-height:1.16;text-wrap:balance}
+p{margin:0 0 1em;max-width:58ch;text-wrap:pretty}
+p:last-child{margin-bottom:0}
+a{color:var(--orange)}
+strong{font-weight:600}
+
+/* ====================================================== sticky top bar */
+.top{position:sticky;top:0;z-index:50;background:var(--paper);
+  border-bottom:1px solid var(--rule)}
+.top .wrap{display:flex;align-items:center;gap:13px;height:var(--bar)}
+.top img{width:30px;height:30px;display:block;flex:none}
+.wordmark{font-family:var(--display);font-size:1.04rem;letter-spacing:-.01em;line-height:1;flex:none}
+.wordmark b{font-weight:600}
+.wordmark i{font-style:normal;font-weight:400}
+.wordmark em{font-style:normal;font-weight:600;color:var(--orange)}
+
+.top nav{margin-left:auto;display:flex;gap:3px;align-items:center;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.top nav::-webkit-scrollbar{display:none}
+.top nav a{color:var(--ink-2);text-decoration:none;white-space:nowrap;
+  padding:6px 9px;border-radius:2px;border:1px solid transparent}
+.top nav a:hover{color:var(--ink)}
+.top nav a.here{color:var(--orange);background:var(--orange-pale)}
+/* hairline progress rule along the foot of the bar */
+.prog{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--orange)}
+@media (max-width:700px){
+  .top .wrap{gap:9px}
+  .wordmark{font-size:.95rem}
+  .top nav{gap:0;font-size:.69rem;margin-left:8px}
+  .top nav a{padding:6px 7px}
+  }
+@media (max-width:420px){.wordmark{display:none}}
+
+/* ============================================================== grounds */
+section{padding:70px 0;background:var(--paper)}
+.s-card{background:var(--card);border-block:1px solid var(--hair)}
+.s-warm{background:var(--warm);border-block:1px solid var(--warm-rule)}
+.s-dark{background:var(--dark);color:var(--d-ink);border-block:1px solid var(--dark)}
+.s-dark + .s-dark{border-top:0;padding-top:0}
+.s-dark h2{color:var(--orange)}            /* large type: 3.24:1, AA large */
+.s-dark p{color:var(--d-ink-2)}
+.s-dark strong{color:var(--d-ink)}
+.s-dark .eyebrow{color:var(--d-ink-3)}
+
+.eyebrow{font-family:var(--mono);font-size:.71rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--orange);margin:0 0 14px;max-width:none}
+
+/* ================================================================= hero */
+.hero{padding:58px 0 70px;background:var(--paper)}
+.hero h1{margin-bottom:.4em}
+.hero .sub{font-family:var(--display);font-size:clamp(1.08rem,2.2vw,1.42rem);
+  line-height:1.45;color:var(--ink-2);max-width:56ch;margin:0 0 9px;text-wrap:balance}
+.hero .meta{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);margin:0;max-width:none}
+
+/* a photograph, full column width, nothing framing it but air */
+.shot{margin:38px 0 0}
+.shot img{display:block;width:100%;height:auto;background:var(--card)}
+.shot figcaption{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);
+  margin-top:10px;max-width:62ch;line-height:1.6}
+.shot figcaption b{color:var(--ink-2);font-weight:400}
+
+/* ============================================= block layout variations */
+.lede{font-size:1.1rem;line-height:1.62;max-width:56ch}
+.lede.say{margin-top:14px;color:var(--ink-2)}
+.two{display:grid;gap:16px;grid-template-columns:1fr;margin-top:30px}
+@media (min-width:720px){.two{grid-template-columns:1fr 1fr;gap:20px}}
+.two figure{margin:0}
+.two img{display:block;width:100%;height:auto;background:var(--card)}
+.two figcaption{font-family:var(--mono);font-size:.71rem;color:var(--ink-3);margin-top:9px;line-height:1.55}
+.two figcaption b{color:var(--orange);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+
+/* split: text beside a column of numbers, used once */
+.split{display:grid;gap:26px;grid-template-columns:1fr;align-items:start}
+.split--gap{margin-top:28px}
+@media (min-width:860px){.split{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:46px}}
+
+/* plots: on the dark ground they sit flush, no frame fighting the band */
+.plot{margin:28px 0 0}
+.plot img{display:block;width:100%;height:auto;background:var(--plot-bg);border:1px solid var(--rule)}
+.s-dark .plot img{border-color:var(--d-rule)}
+.plot figcaption{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);
+  margin-top:10px;max-width:64ch;line-height:1.6}
+.s-dark .plot figcaption{color:var(--d-ink-3)}
+.plot figcaption b{color:var(--orange);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.s-dark .plot figcaption b{color:var(--d-ink-2)}   /* small text: neutral, not orange */
+.plot figcaption em{font-style:normal;color:var(--ink);font-weight:500}
+.s-dark .plot figcaption em{color:var(--d-ink)}
+
+/* numbers */
+.vals{font-family:var(--mono);font-size:.78rem;margin:0;max-width:340px}
+.vals div{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.s-dark .vals div{border-color:var(--d-rule)}
+.vals div:last-child{border-bottom:0}
+.vals span{color:var(--ink-2)}
+.s-dark .vals span{color:var(--d-ink-3)}
+.vals b{color:var(--orange);font-weight:500;font-variant-numeric:tabular-nums}
+.s-dark .vals b{color:var(--d-ink)}                /* small text: neutral on dark */
+.vals .cap{display:block;font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 9px}
+.s-dark .vals .cap{color:var(--d-ink-3)}
+
+/* method: stages beside the figure */
+.stages{list-style:none;margin:0;padding:0;counter-reset:s;max-width:58ch}
+.stages li{counter-increment:s;padding:11px 0 11px 38px;position:relative;border-bottom:1px solid var(--warm-rule)}
+.stages li:last-child{border-bottom:0}
+.stages li::before{content:counter(s);position:absolute;left:0;top:11px;
+  font-family:var(--mono);font-size:.74rem;color:var(--orange)}
+.stages b{font-weight:600}
+.stages span{color:var(--ink-2)}
+
+.plain{list-style:none;margin:22px 0 0;padding:0;max-width:58ch}
+.plain li{padding:9px 0;border-bottom:1px solid var(--hair);color:var(--ink-2)}
+.plain li:last-child{border-bottom:0}
+.plain b{color:var(--ink);font-weight:600}
+
+.fam{list-style:none;margin:22px 0 0;padding:0;max-width:58ch}
+.fam li{display:flex;gap:18px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--hair)}
+.fam li:last-child{border-bottom:0}
+.fam .st{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);flex:none;width:112px}
+.fam li.now .st{color:var(--orange)}
+.fam b{font-weight:600}
+.fam p{margin:2px 0 0;color:var(--ink-2);font-size:.95rem}
+
+.prov{margin-top:18px;font-size:.86rem;color:var(--ink-3);max-width:62ch}
+.s-dark .prov{color:var(--d-ink-3)}
+
+footer{background:var(--card);border-top:1px solid var(--rule);
+  padding:34px 0 46px;color:var(--ink-3);font-size:.84rem;line-height:1.6}
+footer p{max-width:74ch;margin:0 0 .7em}
+footer .fine{font-size:.78rem}
+
+@media (max-width:620px){
+  body{font-size:16px}
+  .hero{padding:34px 0 48px}
+  section{padding:48px 0}
+  .fam li{flex-direction:column;gap:2px}
+  .fam .st{width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <img src="haloidcraft-logo.svg" alt="" width="30" height="30">
+    <span class="wordmark"><b>Haloid</b><i>Craft</i> <em>Grain</em></span>
+    <nav id="nav">
+      <a href="#why">Why</a>
+      <a href="#measure">Measurement</a>
+      <a href="#method">Method</a>
+      <a href="#app">The app</a>
+      <a href="#limits">Limits</a>
+    </nav>
+  </div>
+  <div class="prog" id="prog"></div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">From silver to silicon</p>
+    <h1><span class="ln">Measure the rig.</span><span class="ln">Then print the negative.</span></h1>
+    <p class="sub">Calibrated camera scanning for black-and-white&nbsp;film.</p>
+    <p class="meta">Windows &middot; early development &middot; not yet released</p>
+
+    <figure class="shot">
+      <img src="figures/fig-rig.jpg" alt="A digital camera on a copy stand above a 120 negative held flat in a carrier on a light table, with a film strip alongside" width="1600" height="893">
+      <figcaption><b>The thing this software is actually about.</b> A camera, a lens, a light source and a piece of film. Four instruments, none of them characterised until someone measures them.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<section id="why" class="s-card">
+  <div class="wrap">
+    <p class="eyebrow">The problem</p>
+    <p class="lede">Photograph a negative, invert it, and the grain often comes back wrong. It clumps. It crawls through the mid-tones. The blame tends to land on the film, the developer, or the converter.</p>
+    <p class="lede say">The cause is further up. Between the negative and the file sits an optical system that nobody has measured, and every conversion downstream inherits whatever it happens to be doing.</p>
+
+    <div class="two">
+      <figure>
+        <img src="figures/fig-capture.jpg" alt="The raw camera capture: dark, flat, low in contrast, with the film carrier visible around the frame" loading="lazy" decoding="async" width="900" height="570">
+        <figcaption><b>Raw capture</b> flat, dark, and so far unmeasured</figcaption>
+      </figure>
+      <figure>
+        <img src="figures/fig-print.jpg" alt="The same frame converted: a full-tone black-and-white print of hay bales in a field, with the grain intact" loading="lazy" decoding="async" width="900" height="570">
+        <figcaption><b>After conversion</b> grain intact, not smoothed away</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="measure" class="s-dark">
+  <div class="wrap">
+    <p class="eyebrow">Measurement &mdash; one rig, 25 September 2026</p>
+    <div class="split">
+      <div>
+        <h2>Your camera is lying about where it clips</h2>
+        <p>The raw file states a saturation point the sensor never reaches. Take the tag at face value and every density downstream is measured against a ceiling roughly 6&nbsp;% too low. Small, constant, and in every frame.</p>
+      </div>
+      <div class="vals">
+        <span class="cap">Sensor, measured</span>
+        <div><span>WhiteLevel tag says</span><b>15360 DN</b></div>
+        <div><span>True saturation</span><b>16372 DN</b></div>
+        <div><span>Black</span><b>512.35 DN</b></div>
+        <div><span>Linear to 1&nbsp;%</span><b>71&nbsp;% of clip</b></div>
+      </div>
+    </div>
+    <figure class="plot">
+      <img src="figures/fig-linearity.png" alt="Linearity plot: signal gain per stop against frame brightness, three colour channels inside a shaded one per cent band" loading="lazy" decoding="async" width="1726" height="318">
+      <figcaption><b>Linearity</b> Doubling the exposure doubles the signal. <em>The channels hold inside the &plusmn;1&nbsp;% band to 71&nbsp;% of clip.</em></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="s-dark">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <h2>And grain lives where the sampling runs out</h2>
+        <p>At this magnification a pixel covers about 14&nbsp;&micro;m of film, which puts the limit near 35&nbsp;lp/mm. A target that appears to resolve 43 is not resolving anything. That is structure the sampling cannot carry, folded back into the picture as something which was never on the film.</p>
+        <p>Grain is broadband and sits right in that region. Knowing where the limit falls is what makes it possible to stop sharpening past it.</p>
+      </div>
+      <div class="vals">
+        <span class="cap">Optics, measured</span>
+        <div><span>Magnification</span><b>0.43&times;</b></div>
+        <div><span>Film per pixel</span><b>~14 &micro;m</b></div>
+        <div><span>Nyquist limit</span><b>~35 lp/mm</b></div>
+        <div><span>Target reads</span><b>43 lp/mm</b></div>
+      </div>
+    </div>
+    <figure class="plot">
+      <img src="figures/fig-mtf-grain.png" alt="Measured lens MTF: contrast kept against detail size in line pairs per millimetre, with the grain band shaded" loading="lazy" decoding="async" width="1726" height="318">
+      <figcaption><b>Lens response</b> Contrast kept, against detail size on the film. <em>The shaded band is where film grain lives.</em></figcaption>
+    </figure>
+    <p class="prov">Sony A7, Rodagon 50/4, HP5 Plus in HC-110 dilution B. Another setup reads differently, which is the reason the step exists.</p>
+  </div>
+</section>
+
+<section id="method" class="s-warm">
+  <div class="wrap">
+    <p class="eyebrow">Method</p>
+    <h2>Then it converts, in that order</h2>
+    <p>Each stage hands the next a physically defined quantity rather than a picture that has already been interpreted. The print comes last, where a darkroom would put it.</p>
+    <div class="split split--gap">
+      <ol class="stages">
+        <li><b>Calibrate.</b> <span>Levels, linearity, flat field, lens MTF per aperture, sampling against Nyquist.</span></li>
+        <li><b>Decode to linear.</b> <span>No colour matrix, no gamma, no tone curve.</span></li>
+        <li><b>Density.</b> <span>Flat field out, transmission to optical density, base and fog subtracted as density.</span></li>
+        <li><b>Through the film's curve.</b> <span>Back to scene-referred relative exposure. A positive in the physical sense.</span></li>
+        <li><b>Print.</b> <span>A measured variable-contrast paper grade, split-grade exposure, an explicit anchor.</span></li>
+      </ol>
+      <div class="vals">
+        <span class="cap">This negative</span>
+        <div><span>Film</span><b>HP5 Plus</b></div>
+        <div><span>Developer</span><b>HC-110 dil. B</b></div>
+        <div><span>Base + fog</span><b>D 0.21</b></div>
+        <div><span>Paper</span><b>Multigrade RC</b></div>
+      </div>
+    </div>
+    <figure class="plot">
+      <img src="figures/fig-film-curve.png" alt="HP5 Plus characteristic curve: density against relative log exposure, with the measured base plus fog drawn across it" loading="lazy" decoding="async" width="1726" height="318">
+      <figcaption><b>Stage four</b> The HP5 Plus curve from Ilford's datasheet, with <em>this negative's measured base-plus-fog drawn across it</em> at D&nbsp;&asymp;&nbsp;0.21.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="app">
+  <div class="wrap">
+    <p class="eyebrow">The application</p>
+    <h2>One window, the whole chain</h2>
+    <p>Every stage stays inspectable. Checks report pass, warn or fail with the number and the threshold, and say whether a value was measured, modelled or assumed.</p>
+    <figure class="shot">
+      <img src="figures/fig-app.jpg" alt="The HaloidCraft Grain application: the converted frame at centre, conversion stages along the top, provenance and statistics at right, histogram and tone curves below" loading="lazy" decoding="async" width="1600" height="982">
+      <figcaption><b>Unretouched screenshot.</b> The converted frame, the stage it came from, the numbers behind it, and the curves that produced it.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="limits" class="s-card">
+  <div class="wrap">
+    <p class="eyebrow">Limits</p>
+    <h2>What it will not do</h2>
+    <p>A measurement tool that oversells itself has already spent the only credit it has.</p>
+    <ul class="plain">
+      <li><b>Windows only.</b> No macOS or Linux build exists.</li>
+      <li><b>Black and white only.</b> Permanent, not a roadmap item.</li>
+      <li><b>Not a raw developer.</b> It does one job and will not replace a general editor.</li>
+      <li><b>No track record.</b> Early development, unreleased, no user base to point at.</li>
+      <li><b>Calibration is real work.</b> Dark frames, flat frames, a target. An afternoon, once per rig.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">The family</p>
+    <h2>Named for what the image is made on</h2>
+    <ul class="fam">
+      <li class="now"><span class="st">In development</span><div><b>HaloidCraft Grain</b><p>Camera scanning, conversion, print stage and grain-preserving retouch for black-and-white film.</p></div></li>
+      <li><span class="st">Concept</span><div><b>HaloidCraft Paper</b><p>Digital-negative curves for contact printing, with a soft proof of the printed result.</p></div></li>
+      <li><span class="st">Concept</span><div><b>HaloidCraft Plate</b><p>Tools for dry plates and daguerreotypes.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Made by Roy van Pelt, the Netherlands. &ldquo;Haloid&rdquo; is an old word for the halide salts that make a photographic emulsion light-sensitive.</p>
+    <p class="fine">&ldquo;HaloidCraft&rdquo;, &ldquo;HaloidCraft Grain&rdquo;, &ldquo;HaloidCraft Paper&rdquo;, &ldquo;HaloidCraft Plate&rdquo; and the HaloidCraft mark identify this project. Screenshots and plots are unretouched output from the application. Competitor capabilities reflect each vendor&rsquo;s own documentation, checked 17 October 2026.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var nav = document.getElementById('nav');
+  if (!nav) return;
+  var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
+  var byId = {};
+  var targets = [];
+  links.forEach(function(a){
+    var el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) { byId[el.id] = a; targets.push(el); }
+  });
+
+  function mark(id){
+    links.forEach(function(a){ a.classList.remove('here'); });
+    if (byId[id]) byId[id].classList.add('here');
+  }
+
+  if ('IntersectionObserver' in window) {
+    // The section whose top has most recently passed under the bar wins, so the
+    // label matches what is being read rather than whatever is merely on screen.
+    var seen = {};
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ seen[e.target.id] = e.isIntersecting; });
+      var current = null;
+      targets.forEach(function(t){ if (seen[t.id]) current = current || t.id; });
+      if (current) mark(current);
+    }, { rootMargin: '-56px 0px -62% 0px', threshold: 0 });
+    targets.forEach(function(t){ io.observe(t); });
+  }
+
+  var prog = document.getElementById('prog');
+  var ticking = false;
+  function draw(){
+    ticking = false;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+    if (prog) prog.style.width = (pct * 100).toFixed(2) + '%';
+  }
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; window.requestAnimationFrame(draw); }
+  }, { passive: true });
+  draw();
+})();
+</script>
 </body>
 </html>
